@@ -19,8 +19,7 @@ namespace License_Key_Generator.Forms
         {
             foreach (Control control in form)
             {
-                if (control.Name != "tbSearch")
-                    control.Enabled = false;
+                control.Enabled = false;
             }
         }
 

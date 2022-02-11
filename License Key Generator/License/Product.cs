@@ -17,7 +17,8 @@
         Discord,
         Completo,
         Pincash,
-        NoSpam,   
-        HoraLogada
+        NoSpam,
+        HoraLogada,
+        AutoGold
     }
 }

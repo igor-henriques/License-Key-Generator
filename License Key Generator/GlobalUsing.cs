@@ -1,0 +1,11 @@
+﻿global using License_Key_Generator.Data;
+global using License_Key_Generator.License;
+global using MySql.Data.MySqlClient;
+global using System.Collections.Generic;
+global using System.Threading.Tasks;
+global using Dapper;
+global using License_Key_Generator.Models;
+global using System;
+global using License_Key_Generator.Interfaces;
+global using License_Key_Generator.Repositories;
+global using System.Windows.Forms;

@@ -1,83 +1,71 @@
-﻿using Dapper;
-using License_Key_Generator.Data;
-using License_Key_Generator.License;
-using MySql.Data.MySqlClient;
-using System;
-using System.IO;
-using System.Windows.Forms;
+﻿namespace License_Key_Generator.Forms;
 
-namespace License_Key_Generator.Forms
+public partial class EditAdvanced : Form
 {
-    public partial class EditAdvanced : Form
+    private CoreLicense currentLicense;
+
+    private readonly ILicenseRepository licenseRepository = new LicenseRepository();
+
+    public EditAdvanced(CoreLicense currentLicense)
     {
-        private CoreLicense currentLicense;
+        InitializeComponent();
 
-        public EditAdvanced(CoreLicense currentLicense)
+        this.currentLicense = currentLicense;
+
+        for (int i = 0; i <= Enum.GetValues(typeof(Product)).Length - 1; i++)
         {
-            InitializeComponent();
-
-            this.Cursor = AnimatedCurs.Create(Path.Combine(Application.StartupPath, "7updot.ani"));
-            this.currentLicense = currentLicense;
-
-            for (int i = 0; i <= Enum.GetValues(typeof(Product)).Length - 1; i++)
-            {
-                cbProducts.Items.Add((Product)i);
-            }
-
-            cbProducts.SelectedIndex = (int)(Product)Enum.Parse(typeof(Product), currentLicense.Product.ToString(), true);
+            cbProducts.Items.Add((Product)i);
         }
 
-        private async void btnSalvar_Click(object sender, EventArgs e)
+        cbProducts.SelectedIndex = (int)(Product)Enum.Parse(typeof(Product), currentLicense.Product.ToString(), true);
+    }
+
+    private async void btnSalvar_Click(object sender, EventArgs e)
+    {
+        try
         {
-            try
-            {                
-                if (MessageBox.Show("Tem certeza que deseja salvar?", "Salvando...", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (MessageBox.Show("Tem certeza que deseja salvar?", "Salvando...", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                if (string.IsNullOrEmpty(tbHWID.Text))
                 {
-                    if (string.IsNullOrEmpty(tbHWID.Text))
-                    {
-                        tbHWID.Text = "0";
-                    }
-
-                    string query = "UPDATE CoreLicense SET User=@User,Hwid=@Hwid,Licensekey=@Licensekey,Validade=@Validade,Product=@Product WHERE Id=@Id";
-
-                    using (var conn = await DbContext.Get())
-                    {
-                        await conn.ExecuteAsync(query, new
-                        {
-                            User = tbName.Text.Trim(),
-                            Hwid = tbHWID.Text.Trim(),
-                            Licensekey = tbKey.Text.Trim(),
-                            Validade = tbValidade.Text == "0" ? Convert.ToDateTime("0000-00-00") : Convert.ToDateTime(Convert.ToDateTime(tbValidade.Text).ToString("yyyy-MM-dd")),
-                            Product = cbProducts.SelectedIndex,
-                            Id = currentLicense.Id
-                        });
-                    }
-
-                    AutoClosingMessageBox.Show("Dados atualizados com sucesso", "Sucesso", 500);
-
-                    Close();
+                    tbHWID.Text = "0";
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString());
+
+                await licenseRepository.UpdateAll(new()
+                {
+                    User = tbName.Text.Trim(),
+                    Hwid = tbHWID.Text.Trim(),
+                    Licensekey = tbKey.Text.Trim(),
+                    Validade = tbValidade.Text == "0" ? Convert.ToDateTime("0000-00-00") : Convert.ToDateTime(Convert.ToDateTime(tbValidade.Text).ToString("yyyy-MM-dd")),
+                    Product = (Product)cbProducts.SelectedItem,
+                    Id = currentLicense.Id,
+                    Active = currentLicense.Active
+                });
+
+                MessageBox.Show("Dados atualizados com sucesso", "Sucesso");
+
+                Close();
             }
         }
-
-        private void btnVoltar_Click(object sender, EventArgs e)
+        catch (Exception ex)
         {
-            Close();
+            MessageBox.Show(ex.ToString());
         }
+    }
 
-        private void EditAdvanced_Load(object sender, EventArgs e)
+    private void btnVoltar_Click(object sender, EventArgs e)
+    {
+        Close();
+    }
+
+    private void EditAdvanced_Load(object sender, EventArgs e)
+    {
+        if (currentLicense != null)
         {
-            if (currentLicense != null)
-            {
-                tbHWID.Text = currentLicense.Hwid;
-                tbKey.Text = currentLicense.Licensekey;
-                tbName.Text = currentLicense.User;
-                tbValidade.Text = currentLicense.Validade.ToString("dd/MM/yyyy");
-            }
+            tbHWID.Text = currentLicense.Hwid;
+            tbKey.Text = currentLicense.Licensekey;
+            tbName.Text = currentLicense.User;
+            tbValidade.Text = currentLicense.Validade.ToString("dd/MM/yyyy");
         }
     }
 }
